@@ -9,48 +9,41 @@ public class Main {
     private static final Scanner scanner = new Scanner(System.in);
     private static final List<Product> products = new ArrayList<>();
 
-    // MAIN AB SIRF 15 LINES KA SUMMARY HAI
     public static void main(String[] args) {
         boolean running = true;
         while (running) {
             showMenu();
             String choice = scanner.nextLine().trim();
             switch (choice) {
-                case "1": printProducts(); break;
-                case "2": addProduct(); break;
-                case "3": searchProduct(); break;
-                case "4": running = false; break;
-                default: System.out.println("Invalid option. Choose 1-4");
+                case "1":
+                    viewAllProducts();
+                    break;
+                case "2":
+                    addProduct();
+                    break;
+                case "3":
+                    searchProduct();
+                    break;
+                case "4":
+                    running = false;
+                    System.out.println("Exiting ShopFlow. Bye!");
+                    break;
+                default:
+                    System.out.println("❌ Invalid choice. Please enter 1-4.");
             }
         }
-        System.out.println("Goodbye!");
     }
 
-    // 1. Menu dikhana
     private static void showMenu() {
-        System.out.println("\n=== SHOPFLOW MENU ===");
+        System.out.println("\n===== ShopFlow Menu =====");
         System.out.println("1. View All Products");
-        System.out.println("2. Add a New Product");
-        System.out.println("3. Search Product by Code");
+        System.out.println("2. Add Product");
+        System.out.println("3. Search Product");
         System.out.println("4. Exit");
-        System.out.print("Choose an option (1-4): ");
+        System.out.print("Enter choice: ");
     }
 
-    // 2. TABLE FORMATTING - SIRF 1 JAGAH
-    // Agar column width change karni hai to sirf yahan karo
-    private static void printHeader() {
-        System.out.println("--------------------------------------------------------------------------------");
-        System.out.printf("| %-10s | %-20s | %-15s | %-10s | %-8s |%n", "CODE", "NAME", "CATEGORY", "PRICE", "STOCK");
-        System.out.println("--------------------------------------------------------------------------------");
-    }
-
-    private static void printRow(Product p) {
-        System.out.printf("| %-10s | %-20s | %-15s | %-10.2f | %-8d |%n",
-                p.getCode(), p.getName(), p.getCategory(), p.getPrice(), p.getStock());
-    }
-
-    // 3. Products print karna
-    private static void printProducts() {
+    private static void viewAllProducts() {
         if (products.isEmpty()) {
             System.out.println("No products available.");
             return;
@@ -59,49 +52,99 @@ public class Main {
         for (Product p : products) {
             printRow(p);
         }
-        System.out.println("--------------------------------------------------------------------------------");
-        printSummary();
     }
 
-    // 4. Product add karna
-    private static void addProduct() {
-        System.out.print("Enter Code: ");
-        String code = scanner.nextLine().trim();
-        System.out.print("Enter Name: ");
-        String name = scanner.nextLine().trim();
-        System.out.print("Enter Category: ");
-        String category = scanner.nextLine().trim();
-        System.out.print("Enter Price: ");
-        double price = Double.parseDouble(scanner.nextLine().trim());
-        System.out.print("Enter Stock: ");
-        int stock = Integer.parseInt(scanner.nextLine().trim());
-
-        products.add(new Product(code, name, category, price, stock));
-        System.out.println("Product added successfully! -> " + name);
-    }
-
-    // 5. Search karna
     private static void searchProduct() {
-        System.out.print("\nEnter product code to search: ");
-        String searchCode = scanner.nextLine().trim();
+        String keyword = readNonEmptyString(scanner, "Enter name or code to search: ");
         boolean found = false;
-
+        printHeader();
         for (Product p : products) {
-            if (p.getCode().equalsIgnoreCase(searchCode)) {
-                printHeader();
+            if (p.getName().toLowerCase().contains(keyword.toLowerCase()) ||
+                    p.getCode().toLowerCase().contains(keyword.toLowerCase())) {
                 printRow(p);
-                System.out.println("--------------------------------------------------------------------------------");
                 found = true;
-                break;
             }
         }
         if (!found) {
-            System.out.println("Product not found with code: " + searchCode);
+            System.out.println("❌ No product found for: " + keyword);
         }
     }
 
-    // 6. Summary
-    private static void printSummary() {
-        System.out.println("Total products: " + products.size());
+    private static void addProduct() {
+        System.out.println("\n--- Add New Product ---");
+        String code = readNonEmptyString(scanner, "Enter Code: ");
+
+        for (Product p : products) {
+            if (p.getCode().equalsIgnoreCase(code)) {
+                System.out.println("❌ Code '" + code + "' already exists. Duplicate not allowed.");
+                return;
+            }
+        }
+
+        String name = readNonEmptyString(scanner, "Enter Name: ");
+        String category = readNonEmptyString(scanner, "Enter Category: ");
+        double price = readPositivePrice(scanner, "Enter Price: ");
+        int stock = readNonNegativeStock(scanner, "Enter Stock: ");
+
+        products.add(new Product(code, name, category, price, stock));
+        System.out.println("✅ Product added successfully! -> " + name);
+    }
+
+    private static void printHeader() {
+        System.out.println("---------------------------------------------------------------");
+        System.out.printf("| %-8s | %-15s | %-10s | %-8s | %-5s |\n", "Code", "Name", "Category", "Price", "Stock");
+        System.out.println("---------------------------------------------------------------");
+    }
+
+    private static void printRow(Product p) {
+        System.out.printf("| %-8s | %-15s | %-10s | %-8.2f | %-5d |\n",
+                p.getCode(), p.getName(), p.getCategory(), p.getPrice(), p.getStock());
+    }
+
+    // --- Day 6: Safe Input Helpers ---
+    private static String readNonEmptyString(Scanner sc, String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            String input = sc.nextLine().trim();
+            if (input.isEmpty()) {
+                System.out.println("❌ Cannot be empty. Please type again.");
+                continue;
+            }
+            return input;
+        }
+    }
+
+    private static double readPositivePrice(Scanner sc, String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            String input = sc.nextLine().trim().replace(",", "");
+            try {
+                double price = Double.parseDouble(input);
+                if (price <= 0) {
+                    System.out.println("❌ Price must be greater than 0.");
+                    continue;
+                }
+                return price;
+            } catch (NumberFormatException e) {
+                System.out.println("❌ Invalid number. Enter like 1200 or 1200.50");
+            }
+        }
+    }
+
+    private static int readNonNegativeStock(Scanner sc, String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            String input = sc.nextLine().trim().replace(",", ""); // Now handles 1,200 also
+            try {
+                int stock = Integer.parseInt(input);
+                if (stock < 0) {
+                    System.out.println("❌ Stock cannot be negative.");
+                    continue;
+                }
+                return stock;
+            } catch (NumberFormatException e) {
+                System.out.println("❌ Invalid stock. Enter whole number like 20");
+            }
+        }
     }
 }
