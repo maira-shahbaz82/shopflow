@@ -1,11 +1,11 @@
 package com.shopflow;
 
 public class Product {
-    String code;
-    String name;
-    String category;
-    double price;
-    int stock;
+    private String code;
+    private String name;
+    private String category;
+    private double price;
+    private int stock;
 
     public Product(String code, String name, String category, double price, int stock) {
         this.code = code;
@@ -15,7 +15,23 @@ public class Product {
         this.stock = stock;
     }
 
-    public double getStockValue() {
-        return price * stock;
+    public String getCode() {
+        return code;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public int getStock() {
+        return stock;
     }
 }
