@@ -1,0 +1,21 @@
+package com.shopflow;
+
+public class OrderItem {
+    private final Product product;
+    private int quantity;
+    private final double unitPrice;
+
+    public OrderItem(Product product, int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be > 0");
+        }
+        this.product = product;
+        this.quantity = quantity;
+        this.unitPrice = product.getPrice();
+    }
+
+    public Product getProduct() { return product; }
+    public int getQuantity() { return quantity; }
+    public double getUnitPrice() { return unitPrice; }
+    public double getLineTotal() { return unitPrice * quantity; }
+}

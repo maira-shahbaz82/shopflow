@@ -5,146 +5,101 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Main {
-
-    private static final Scanner scanner = new Scanner(System.in);
-    private static final List<Product> products = new ArrayList<>();
+    static List<Product> products = new ArrayList<>();
+    static List<Customer> customers = new ArrayList<>();
+    static List<Order> orders = new ArrayList<>();
+    static Scanner sc = new Scanner(System.in);
+    static int customerCounter = 1;
+    static int orderCounter = 1;
 
     public static void main(String[] args) {
-        boolean running = true;
-        while (running) {
-            showMenu();
-            String choice = scanner.nextLine().trim();
-            switch (choice) {
-                case "1":
-                    viewAllProducts();
-                    break;
-                case "2":
-                    addProduct();
-                    break;
-                case "3":
-                    searchProduct();
-                    break;
-                case "4":
-                    running = false;
-                    System.out.println("Exiting ShopFlow. Bye!");
-                    break;
-                default:
-                    System.out.println("❌ Invalid choice. Please enter 1-4.");
-            }
-        }
-    }
+        products.add(new Product("P01", "Tea", 100, 10));
+        products.add(new Product("P02", "Sugar", 200, 5));
+        products.add(new Product("P03", "Milk", 150, 3));
 
-    private static void showMenu() {
-        System.out.println("\n===== ShopFlow Menu =====");
-        System.out.println("1. View All Products");
-        System.out.println("2. Add Product");
-        System.out.println("3. Search Product");
-        System.out.println("4. Exit");
-        System.out.print("Enter choice: ");
-    }
-
-    private static void viewAllProducts() {
-        if (products.isEmpty()) {
-            System.out.println("No products available.");
-            return;
-        }
-        printHeader();
-        for (Product p : products) {
-            printRow(p);
-        }
-    }
-
-    private static void searchProduct() {
-        String keyword = readNonEmptyString(scanner, "Enter name or code to search: ");
-        boolean found = false;
-        printHeader();
-        for (Product p : products) {
-            if (p.getName().toLowerCase().contains(keyword.toLowerCase()) ||
-                    p.getCode().toLowerCase().contains(keyword.toLowerCase())) {
-                printRow(p);
-                found = true;
-            }
-        }
-        if (!found) {
-            System.out.println("❌ No product found for: " + keyword);
-        }
-    }
-
-    private static void addProduct() {
-        System.out.println("\n--- Add New Product ---");
-        String code = readNonEmptyString(scanner, "Enter Code: ");
-
-        for (Product p : products) {
-            if (p.getCode().equalsIgnoreCase(code)) {
-                System.out.println("❌ Code '" + code + "' already exists. Duplicate not allowed.");
-                return;
-            }
-        }
-
-        String name = readNonEmptyString(scanner, "Enter Name: ");
-        String category = readNonEmptyString(scanner, "Enter Category: ");
-        double price = readPositivePrice(scanner, "Enter Price: ");
-        int stock = readNonNegativeStock(scanner, "Enter Stock: ");
-
-        Product newProduct = new Product(code, name, category, price, stock);
-        products.add(newProduct);
-        System.out.println("✅ Product added successfully! -> " + newProduct);
-    }
-
-    private static void printHeader() {
-        System.out.println("--------------------------------------------------------------------------------");
-        System.out.printf("| %-8s | %-15s | %-10s | %-8s | %-5s | %-10s |\n", "Code", "Name", "Category", "Price", "Stock", "Value");
-        System.out.println("--------------------------------------------------------------------------------");
-    }
-
-    private static void printRow(Product p) {
-        System.out.printf("| %-8s | %-15s | %-10s | %-8.2f | %-5d | %-10.2f |\n",
-                p.getCode(), p.getName(), p.getCategory(), p.getPrice(), p.getStock(), p.getStockValue());
-    }
-
-    private static String readNonEmptyString(Scanner sc, String prompt) {
         while (true) {
-            System.out.print(prompt);
-            String input = sc.nextLine().trim();
-            if (input.isEmpty()) {
-                System.out.println("❌ Cannot be empty. Please type again.");
-                continue;
-            }
-            return input;
+            System.out.println("\n--- ShopFlow Day 9 ---");
+            System.out.println("1. Show Products");
+            System.out.println("2. Register Customer");
+            System.out.println("3. Place Order");
+            System.out.println("4. View Order Receipt");
+            System.out.println("0. Exit");
+            System.out.print("Choice: ");
+            int choice = sc.nextInt(); sc.nextLine();
+            if (choice == 1) showProducts();
+            else if (choice == 2) registerCustomer();
+            else if (choice == 3) placeOrder();
+            else if (choice == 4) viewOrder();
+            else if (choice == 0) break;
         }
     }
 
-    private static double readPositivePrice(Scanner sc, String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            String input = sc.nextLine().trim().replace(",", "");
-            try {
-                double price = Double.parseDouble(input);
-                if (price <= 0) {
-                    System.out.println("❌ Price must be greater than 0.");
-                    continue;
-                }
-                return price;
-            } catch (NumberFormatException e) {
-                System.out.println("❌ Invalid number. Enter like 1200 or 1200.50");
-            }
-        }
+    static void showProducts() {
+        System.out.println("\n--- Products ---");
+        for (Product p : products) System.out.println(p);
     }
 
-    private static int readNonNegativeStock(Scanner sc, String prompt) {
+    static void registerCustomer() {
+        System.out.print("Name: "); String name = sc.nextLine();
+        System.out.print("Email: "); String email = sc.nextLine();
+        System.out.print("Phone: "); String phone = sc.nextLine();
+        String id = "C" + String.format("%03d", customerCounter++);
+        customers.add(new Customer(id, name, email, phone));
+        System.out.println("Customer Registered: " + id + " - " + name);
+    }
+
+    static void placeOrder() {
+        if (customers.isEmpty()) { System.out.println("No customers! First register (Option 2)"); return; }
+        System.out.print("Enter Customer ID (e.g. C001): "); String cid = sc.nextLine();
+        Customer cust = null;
+        for (Customer c : customers) if (c.getId().equalsIgnoreCase(cid)) cust = c;
+        if (cust == null) { System.out.println("Customer not found! Order can never exist without a customer"); return; }
+
+        String oid = "ORD" + String.format("%03d", orderCounter++);
+        Order order = new Order(oid, cust);
+        System.out.println("Placing order for " + cust.getName() + ". Type 'done' to finish.");
+
         while (true) {
-            System.out.print(prompt);
-            String input = sc.nextLine().trim().replace(",", "");
-            try {
-                int stock = Integer.parseInt(input);
-                if (stock < 0) {
-                    System.out.println("❌ Stock cannot be negative.");
-                    continue;
-                }
-                return stock;
-            } catch (NumberFormatException e) {
-                System.out.println("❌ Invalid stock. Enter whole number like 20");
-            }
+            System.out.print("Product Code (or done): "); String code = sc.nextLine();
+            if (code.equalsIgnoreCase("done")) break;
+            Product prod = null;
+            for (Product p : products) if (p.getId().equalsIgnoreCase(code)) prod = p;
+            if (prod == null) { System.out.println("Product not found"); continue; }
+
+            System.out.print("Quantity: "); int qty = sc.nextInt(); sc.nextLine();
+            if (qty <= 0) { System.out.println("❌ Zero / negative quantity not allowed"); continue; }
+            if (qty > prod.getStock()) { System.out.println("❌ Not enough stock! Only " + prod.getStock() + " left. Refused."); continue; }
+
+            OrderItem item = new OrderItem(prod, qty);
+            order.addItem(item);
+            prod.reduceStock(qty);
+            System.out.println("✅ Added: " + prod.getName() + " x " + qty + " = " + item.getLineTotal());
         }
+        if (order.getItems().isEmpty()) { System.out.println("Order empty, cancelled"); return; }
+        orders.add(order);
+        printReceipt(order);
+    }
+
+    static void viewOrder() {
+        System.out.print("Order ID (e.g. ORD001): "); String oid = sc.nextLine();
+        for (Order o : orders) if (o.getId().equalsIgnoreCase(oid)) { printReceipt(o); return; }
+        System.out.println("Order not found");
+    }
+
+    static void printReceipt(Order o) {
+        System.out.println("\n====== RECEIPT ======");
+        System.out.println("Order: " + o.getId() + " | Date: " + o.getDate());
+        System.out.println("Customer: " + o.getCustomer().getId() + " - " + o.getCustomer().getName());
+        System.out.println("---------------------");
+        double check = 0;
+        for (OrderItem it : o.getItems()) {
+            System.out.println(it.getProduct().getId() + " - " + it.getProduct().getName() + " x " + it.getQuantity() + " @ " + it.getUnitPrice() + " = " + it.getLineTotal());
+            check += it.getLineTotal();
+        }
+        System.out.println("---------------------");
+        System.out.println("Manual Sum: " + check);
+        System.out.println("Order Total: " + o.getTotal());
+        System.out.println("Verified: " + (check == o.getTotal() ? "YES ✅" : "NO ❌"));
+        System.out.println("====================\n");
     }
 }
