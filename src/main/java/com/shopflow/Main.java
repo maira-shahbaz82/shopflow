@@ -86,22 +86,22 @@ public class Main {
         double price = readPositivePrice(scanner, "Enter Price: ");
         int stock = readNonNegativeStock(scanner, "Enter Stock: ");
 
-        products.add(new Product(code, name, category, price, stock));
-        System.out.println("✅ Product added successfully! -> " + name);
+        Product newProduct = new Product(code, name, category, price, stock);
+        products.add(newProduct);
+        System.out.println("✅ Product added successfully! -> " + newProduct);
     }
 
     private static void printHeader() {
-        System.out.println("---------------------------------------------------------------");
-        System.out.printf("| %-8s | %-15s | %-10s | %-8s | %-5s |\n", "Code", "Name", "Category", "Price", "Stock");
-        System.out.println("---------------------------------------------------------------");
+        System.out.println("--------------------------------------------------------------------------------");
+        System.out.printf("| %-8s | %-15s | %-10s | %-8s | %-5s | %-10s |\n", "Code", "Name", "Category", "Price", "Stock", "Value");
+        System.out.println("--------------------------------------------------------------------------------");
     }
 
     private static void printRow(Product p) {
-        System.out.printf("| %-8s | %-15s | %-10s | %-8.2f | %-5d |\n",
-                p.getCode(), p.getName(), p.getCategory(), p.getPrice(), p.getStock());
+        System.out.printf("| %-8s | %-15s | %-10s | %-8.2f | %-5d | %-10.2f |\n",
+                p.getCode(), p.getName(), p.getCategory(), p.getPrice(), p.getStock(), p.getStockValue());
     }
 
-    // --- Day 6: Safe Input Helpers ---
     private static String readNonEmptyString(Scanner sc, String prompt) {
         while (true) {
             System.out.print(prompt);
@@ -134,7 +134,7 @@ public class Main {
     private static int readNonNegativeStock(Scanner sc, String prompt) {
         while (true) {
             System.out.print(prompt);
-            String input = sc.nextLine().trim().replace(",", ""); // Now handles 1,200 also
+            String input = sc.nextLine().trim().replace(",", "");
             try {
                 int stock = Integer.parseInt(input);
                 if (stock < 0) {
