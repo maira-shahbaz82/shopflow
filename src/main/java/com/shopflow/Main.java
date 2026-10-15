@@ -18,88 +18,91 @@ public class Main {
         products.add(new Product("P03", "Milk", 150, 3));
 
         while (true) {
-            System.out.println("\n--- ShopFlow Day 9 ---");
-            System.out.println("1. Show Products");
-            System.out.println("2. Register Customer");
-            System.out.println("3. Place Order");
-            System.out.println("4. View Order Receipt");
-            System.out.println("0. Exit");
-            System.out.print("Choice: ");
-            int choice = sc.nextInt(); sc.nextLine();
-            if (choice == 1) showProducts();
-            else if (choice == 2) registerCustomer();
-            else if (choice == 3) placeOrder();
-            else if (choice == 4) viewOrder();
-            else if (choice == 0) break;
+            System.out.println("\n--- Shopflow ---");
+            System.out.println("1. Add Customer");
+            System.out.println("2. Create Order");
+            System.out.println("3. View Orders");
+            System.out.println("4. Exit");
+            System.out.print("Choose: ");
+            int choice = sc.nextInt();
+            sc.nextLine();
+            if (choice == 1) addCustomer();
+            else if (choice == 2) createOrder();
+            else if (choice == 3) viewOrders();
+            else if (choice == 4) break;
         }
     }
 
-    static void showProducts() {
-        System.out.println("\n--- Products ---");
-        for (Product p : products) System.out.println(p);
+    static void addCustomer() {
+        System.out.print("Customer Name: ");
+        String name = sc.nextLine();
+        Customer c = new Customer("C" + customerCounter++, name);
+        customers.add(c);
+        System.out.println("Customer Added: " + c.getId());
     }
 
-    static void registerCustomer() {
-        System.out.print("Name: "); String name = sc.nextLine();
-        System.out.print("Email: "); String email = sc.nextLine();
-        System.out.print("Phone: "); String phone = sc.nextLine();
-        String id = "C" + String.format("%03d", customerCounter++);
-        customers.add(new Customer(id, name, email, phone));
-        System.out.println("Customer Registered: " + id + " - " + name);
-    }
-
-    static void placeOrder() {
-        if (customers.isEmpty()) { System.out.println("No customers! First register (Option 2)"); return; }
-        System.out.print("Enter Customer ID (e.g. C001): "); String cid = sc.nextLine();
+    static void createOrder() {
+        if (customers.isEmpty()) {
+            System.out.println("First add customer!");
+            return;
+        }
+        System.out.print("Enter Customer ID: ");
+        String cid = sc.nextLine();
         Customer cust = null;
-        for (Customer c : customers) if (c.getId().equalsIgnoreCase(cid)) cust = c;
-        if (cust == null) { System.out.println("Customer not found! Order can never exist without a customer"); return; }
-
-        String oid = "ORD" + String.format("%03d", orderCounter++);
-        Order order = new Order(oid, cust);
-        System.out.println("Placing order for " + cust.getName() + ". Type 'done' to finish.");
-
+        for (Customer c : customers) {
+            if (c.getId().equals(cid)) { cust = c; break; }
+        }
+        if (cust == null) {
+            System.out.println("Customer not found!");
+            return;
+        }
+        Order order = new Order("O" + orderCounter++, cust);
         while (true) {
-            System.out.print("Product Code (or done): "); String code = sc.nextLine();
-            if (code.equalsIgnoreCase("done")) break;
+            System.out.println("\nProducts:");
+            for (Product p : products) {
+                System.out.println(p.getId() + " - " + p.getName() + " - Rs." + p.getPrice() + " - Stock:" + p.getStock());
+            }
+            System.out.print("Enter Product ID (or 'done'): ");
+            String pid = sc.nextLine();
+            if (pid.equalsIgnoreCase("done")) break;
             Product prod = null;
-            for (Product p : products) if (p.getId().equalsIgnoreCase(code)) prod = p;
-            if (prod == null) { System.out.println("Product not found"); continue; }
-
-            System.out.print("Quantity: "); int qty = sc.nextInt(); sc.nextLine();
-            if (qty <= 0) { System.out.println("❌ Zero / negative quantity not allowed"); continue; }
-            if (qty > prod.getStock()) { System.out.println("❌ Not enough stock! Only " + prod.getStock() + " left. Refused."); continue; }
-
-            OrderItem item = new OrderItem(prod, qty);
-            order.addItem(item);
-            prod.reduceStock(qty);
-            System.out.println("✅ Added: " + prod.getName() + " x " + qty + " = " + item.getLineTotal());
+            for (Product p : products) {
+                if (p.getId().equals(pid)) { prod = p; break; }
+            }
+            if (prod == null) {
+                System.out.println("Product not found!");
+                continue;
+            }
+            System.out.print("Quantity: ");
+            int qty = sc.nextInt();
+            sc.nextLine();
+            if (prod.getStock() >= qty) {
+                order.addItem(new OrderItem(prod, qty));
+                prod.reduceStock(qty);
+            } else {
+                System.out.println("Not enough stock!");
+            }
         }
-        if (order.getItems().isEmpty()) { System.out.println("Order empty, cancelled"); return; }
         orders.add(order);
-        printReceipt(order);
+        System.out.println("Order Created: " + order.getId() + " Status: " + order.getStatus());
     }
 
-    static void viewOrder() {
-        System.out.print("Order ID (e.g. ORD001): "); String oid = sc.nextLine();
-        for (Order o : orders) if (o.getId().equalsIgnoreCase(oid)) { printReceipt(o); return; }
-        System.out.println("Order not found");
-    }
-
-    static void printReceipt(Order o) {
-        System.out.println("\n====== RECEIPT ======");
-        System.out.println("Order: " + o.getId() + " | Date: " + o.getDate());
-        System.out.println("Customer: " + o.getCustomer().getId() + " - " + o.getCustomer().getName());
-        System.out.println("---------------------");
-        double check = 0;
-        for (OrderItem it : o.getItems()) {
-            System.out.println(it.getProduct().getId() + " - " + it.getProduct().getName() + " x " + it.getQuantity() + " @ " + it.getUnitPrice() + " = " + it.getLineTotal());
-            check += it.getLineTotal();
+    static void viewOrders() {
+        if (orders.isEmpty()) {
+            System.out.println("No orders yet!");
+            return;
         }
-        System.out.println("---------------------");
-        System.out.println("Manual Sum: " + check);
-        System.out.println("Order Total: " + o.getTotal());
-        System.out.println("Verified: " + (check == o.getTotal() ? "YES ✅" : "NO ❌"));
-        System.out.println("====================\n");
+        for (Order o : orders) {
+            System.out.println("\n--- RECEIPT ---");
+            System.out.println("Order ID: " + o.getId());
+            System.out.println("Customer: " + o.getCustomer().getName());
+            System.out.println("Status: " + o.getStatus());
+            System.out.println("Items:");
+            for (OrderItem item : o.getItems()) {
+                System.out.println("  " + item.getProduct().getName() + " x " + item.getQuantity() + " = " + (item.getProduct().getPrice() * item.getQuantity()));
+            }
+            System.out.println("Total: Rs." + o.getTotal());
+            System.out.println("---------------");
+        }
     }
 }

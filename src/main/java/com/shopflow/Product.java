@@ -17,15 +17,5 @@ public class Product {
     public String getName() { return name; }
     public double getPrice() { return price; }
     public int getStock() { return stock; }
-
-    public boolean reduceStock(int qty) {
-        if (qty <= 0 || qty > this.stock) return false;
-        this.stock -= qty;
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        return id + " - " + name + " | Price: " + price + " | Stock: " + stock;
-    }
+    public void reduceStock(int qty) { this.stock -= qty; }
 }
