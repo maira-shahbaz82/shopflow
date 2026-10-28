@@ -2,6 +2,7 @@ package com.shopflow;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Objects;
 
 public class Product {
     private String id;
@@ -21,7 +22,31 @@ public class Product {
     public BigDecimal getPrice() { return price; }
     public int getStock() { return stock; }
 
-    public BigDecimal getStockValue() {
-        return price.multiply(BigDecimal.valueOf(stock)).setScale(2, RoundingMode.HALF_UP);
+    public void setName(String name) { this.name = name; }
+    public void setPrice(BigDecimal price) {
+        this.price = price.setScale(2, RoundingMode.HALF_UP);
+    }
+    public void setStock(int stock) { this.stock = stock; }
+
+    @Override
+    public String toString() {
+        return id + " - " + name + " - " + price + " - stock: " + stock;
+    }
+
+    // BUSINESS RULE: A product is the same product if its productCode (id) is same.
+    // Price, name, stock can change over time, but id is the identity.
+    // e.g., KB-100 Wireless Keyboard should exist only once in catalogue.
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Product product = (Product) o;
+        return id.equals(product.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
