@@ -1,20 +1,17 @@
 package com.shopflow;
 
-public class FlatDiscount implements Discount {
-    private double amount;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
-    public FlatDiscount(double amount) {
-        this.amount = amount;
+public class FlatDiscount extends Discount {
+    private BigDecimal amount;
+
+    public FlatDiscount(BigDecimal amount) {
+        this.amount = amount.setScale(2, RoundingMode.HALF_UP);
     }
 
     @Override
-    public double calculateDiscount(Order order) {
-        // Rule: total kabhi 0 se neeche nahi jaye
-        return Math.min(amount, order.getTotal());
-    }
-
-    @Override
-    public String getDescription() {
-        return "Rs. " + amount + " OFF";
+    public BigDecimal calculateDiscount(Order order) {
+        return amount;
     }
 }

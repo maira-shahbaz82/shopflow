@@ -1,34 +1,26 @@
 package com.shopflow;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 
-public class Buy3Get1FreeDiscount implements Discount {
-
+public class Buy3Get1FreeDiscount extends Discount {
     @Override
-    public double calculateDiscount(Order order) {
-        List<Double> allPrices = new ArrayList<>();
-
+    public BigDecimal calculateDiscount(Order order) {
+        List<BigDecimal> allUnitPrices = new ArrayList<>();
         for (OrderItem item : order.getItems()) {
             for (int i = 0; i < item.getQuantity(); i++) {
-                allPrices.add(item.getProduct().getPrice());
+                allUnitPrices.add(item.getProduct().getPrice());
             }
         }
-
-        if (allPrices.size() < 4) return 0;
-
-        allPrices.sort(Comparator.naturalOrder());
-        int freeCount = allPrices.size() / 4;
-        double discount = 0;
+        Collections.sort(allUnitPrices);
+        int freeCount = allUnitPrices.size() / 4;
+        BigDecimal discount = BigDecimal.ZERO;
         for (int i = 0; i < freeCount; i++) {
-            discount += allPrices.get(i);
+            discount = discount.add(allUnitPrices.get(i));
         }
-        return discount;
-    }
-
-    @Override
-    public String getDescription() {
-        return "Buy 3 Get 1 Free (Cheapest)";
+        return discount.setScale(2, RoundingMode.HALF_UP);
     }
 }

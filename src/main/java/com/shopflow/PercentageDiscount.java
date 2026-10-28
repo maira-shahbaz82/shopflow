@@ -1,19 +1,19 @@
 package com.shopflow;
 
-public class PercentageDiscount implements Discount {
-    private double percent;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
-    public PercentageDiscount(double percent) {
+public class PercentageDiscount extends Discount {
+    private BigDecimal percent;
+
+    public PercentageDiscount(BigDecimal percent) {
         this.percent = percent;
     }
 
     @Override
-    public double calculateDiscount(Order order) {
-        return order.getTotal() * (percent / 100.0);
-    }
-
-    @Override
-    public String getDescription() {
-        return percent + "% OFF";
+    public BigDecimal calculateDiscount(Order order) {
+        BigDecimal total = order.calculateTotal();
+        return total.multiply(percent)
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
     }
 }
