@@ -1,6 +1,7 @@
 package com.shopflow;
 
-public interface Discount {
-    double calculateDiscount(Order order);
-    String getDescription();
+import java.math.BigDecimal;
+
+public abstract class Discount {
+    public abstract BigDecimal calculateDiscount(Order order);
 }

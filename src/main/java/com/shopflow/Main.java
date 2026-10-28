@@ -1,121 +1,54 @@
 package com.shopflow;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 public class Main {
     static List<Product> products = new ArrayList<>();
     static List<Customer> customers = new ArrayList<>();
-    static List<Order> orders = new ArrayList<>();
-    static Scanner scanner = new Scanner(System.in);
-    static int orderCounter = 1;
 
     public static void main(String[] args) {
-        // Seed data
-        products.add(new Product("P01", "Rice", 500, 100));
-        products.add(new Product("P02", "Sugar", 300, 100));
-        products.add(new Product("P03", "Oil", 400, 50));
-        customers.add(new Customer("C01", "Ali"));
+        // FIX: BigDecimal hamesha String se banao "500.00" - double se nahi
+        products.add(new Product("P01", "Ring", new BigDecimal("500.00"), 100));
+        products.add(new Product("P02", "Bracelet", new BigDecimal("800.00"), 50));
+        products.add(new Product("P03", "Necklace", new BigDecimal("1199.00"), 20));
+        products.add(new Product("P04", "Earring", new BigDecimal("0.10"), 1000));
 
-        while (true) {
-            System.out.println("\n--- Shopflow Menu ---");
-            System.out.println("1. Add Customer");
-            System.out.println("2. Create Order");
-            System.out.println("3. View Orders");
-            System.out.println("4. Apply Discount to Order");
-            System.out.println("5. Exit");
-            System.out.print("Enter choice: ");
-            int choice = scanner.nextInt();
-            scanner.nextLine();
+        customers.add(new Customer("C01", "Maira"));
 
-            if (choice == 1) addCustomer();
-            else if (choice == 2) createOrder();
-            else if (choice == 3) viewOrders();
-            else if (choice == 4) applyDiscountToOrder();
-            else if (choice == 5) break;
-            else System.out.println("Invalid choice!");
+        System.out.println("=== Day 12 - Money Bug Fix Test ===");
+
+        // Test 1: Adding 0.10 ten times should be exactly 1.00 (Finance bug)
+        Order test1 = new Order("TEST1", customers.get(0));
+        test1.addItem(products.get(3), 10);
+        System.out.println("Test 0.10 x 10 = " + test1.calculateTotal() + " -> Expected: 1.00");
+
+        // Test 2: 10% discount on 1199 should be 119.90, not 119.89
+        Order test2 = new Order("TEST2", customers.get(0));
+        test2.addItem(products.get(2), 1);
+        System.out.println("\nTest 1199 with 10% discount:");
+        test2.printReceiptWithDiscount(new PercentageDiscount(new BigDecimal("10")));
+        // Expected: Subtotal 1199.00, Discount 119.90, Final 1079.10
+
+        // Test 3: No long decimal tail
+        Order test3 = new Order("TEST3", customers.get(0));
+        test3.addItem(products.get(0), 3);
+        test3.addItem(products.get(1), 2);
+        System.out.println("\nTest Stock Order Total (should not have .999999):");
+        System.out.println("Total: " + test3.calculateTotal());
+
+        // Stock Value Report
+        System.out.println("\n--- Stock Value Report ---");
+        BigDecimal totalStockValue = BigDecimal.ZERO;
+        for (Product p : products) {
+            BigDecimal val = p.getStockValue();
+            System.out.println(p.getName() + ": Rs. " + val);
+            totalStockValue = totalStockValue.add(val);
         }
-    }
+        System.out.println("Total Stock Value: Rs. " + totalStockValue.setScale(2, RoundingMode.HALF_UP));
 
-    static void addCustomer() {
-        System.out.print("Enter Customer ID: ");
-        String id = scanner.nextLine();
-        System.out.print("Enter Customer Name: ");
-        String name = scanner.nextLine();
-        customers.add(new Customer(id, name));
-        System.out.println("Customer added!");
-    }
-
-    static void createOrder() {
-        System.out.print("Enter Customer ID: ");
-        String cid = scanner.nextLine();
-        Customer cust = null;
-        for (Customer c : customers) if (c.getId().equals(cid)) cust = c;
-        if (cust == null) { System.out.println("Customer not found!"); return; }
-
-        Order order = new Order("ORD" + orderCounter++, cust);
-        while (true) {
-            System.out.print("Enter Product ID (or 'done'): ");
-            String pid = scanner.nextLine();
-            if (pid.equals("done")) break;
-            Product prod = null;
-            for (Product p : products) if (p.getId().equals(pid)) prod = p;
-            if (prod == null) { System.out.println("Product not found!"); continue; }
-            System.out.print("Enter Quantity: ");
-            int qty = scanner.nextInt();
-            scanner.nextLine();
-            if (qty > prod.getStock()) { System.out.println("Not enough stock!"); continue; }
-            order.addItem(new OrderItem(prod, qty));
-            prod.reduceStock(qty);
-        }
-        orders.add(order);
-        System.out.println("Order created: " + order.getId() + " Total: " + order.getTotal());
-    }
-
-    static void viewOrders() {
-        if (orders.isEmpty()) {
-            System.out.println("No orders yet!");
-            return;
-        }
-        for (Order o : orders) {
-            System.out.println("\n--- RECEIPT ---");
-            System.out.println("Order ID: " + o.getId());
-            System.out.println("Customer: " + o.getCustomer().getName());
-            System.out.println("Status: " + o.getStatus());
-            System.out.println("Items:");
-            for (OrderItem item : o.getItems()) {
-                System.out.println("  " + item.getProduct().getName() + " x " + item.getQuantity());
-            }
-            System.out.println("Total: Rs." + o.getTotal());
-            System.out.println("----------------");
-        }
-    }
-
-    static void applyDiscountToOrder() {
-        if (orders.isEmpty()) { System.out.println("No orders yet!"); return; }
-        System.out.print("Enter Order ID: ");
-        String oid = scanner.nextLine();
-        Order selected = null;
-        for (Order o : orders) if (o.getId().equals(oid)) selected = o;
-        if (selected == null) { System.out.println("Order not found!"); return; }
-
-        System.out.println("1. 10% OFF");
-        System.out.println("2. Rs. 500 OFF");
-        System.out.println("3. Buy 3 Get 1 Free");
-        System.out.println("4. Test 200% (check total never negative)");
-        System.out.print("Enter choice: ");
-        int dChoice = scanner.nextInt();
-        scanner.nextLine();
-
-        Discount d = null;
-        if (dChoice == 1) d = new PercentageDiscount(10);
-        else if (dChoice == 2) d = new FlatDiscount(500);
-        else if (dChoice == 3) d = new Buy3Get1FreeDiscount();
-        else if (dChoice == 4) d = new PercentageDiscount(200);
-
-        if (d != null) {
-            selected.printReceiptWithDiscount(d);
-        }
+        System.out.println("\n=== All tests passed if no .999999 values ===");
     }
 }

@@ -1,21 +1,27 @@
 package com.shopflow;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 public class Product {
-    private final String id;
+    private String id;
     private String name;
-    private double price;
+    private BigDecimal price;
     private int stock;
 
-    public Product(String id, String name, double price, int stock) {
+    public Product(String id, String name, BigDecimal price, int stock) {
         this.id = id;
         this.name = name;
-        this.price = price;
+        this.price = price.setScale(2, RoundingMode.HALF_UP);
         this.stock = stock;
     }
 
     public String getId() { return id; }
     public String getName() { return name; }
-    public double getPrice() { return price; }
+    public BigDecimal getPrice() { return price; }
     public int getStock() { return stock; }
-    public void reduceStock(int qty) { this.stock -= qty; }
+
+    public BigDecimal getStockValue() {
+        return price.multiply(BigDecimal.valueOf(stock)).setScale(2, RoundingMode.HALF_UP);
+    }
 }
